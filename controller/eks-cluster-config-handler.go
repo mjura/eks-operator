@@ -826,8 +826,7 @@ func BuildUpstreamClusterState(name, managedTemplateID string, clusterState *eks
 	// set node groups
 	upstreamSpec.NodeGroups = make([]eksv1.NodeGroup, 0, len(nodeGroupStates))
 	for _, ng := range nodeGroupStates {
-		if aws.StringValue(ng.Nodegroup.Status) == eks.NodegroupStatusUpdating ||
-			aws.StringValue(ng.Nodegroup.Status) == eks.NodegroupStatusDeleting {
+		if aws.StringValue(ng.Nodegroup.Status) == eks.NodegroupStatusDeleting {
 			continue
 		}
 		ngToAdd := eksv1.NodeGroup{
@@ -840,8 +839,11 @@ func BuildUpstreamClusterState(name, managedTemplateID string, clusterState *eks
 			NodeRole:             ng.Nodegroup.NodeRole,
 			Subnets:              aws.StringValueSlice(ng.Nodegroup.Subnets),
 			Tags:                 ng.Nodegroup.Tags,
-			Version:              ng.Nodegroup.Version,
 			RequestSpotInstances: aws.Bool(aws.StringValue(ng.Nodegroup.CapacityType) == eks.CapacityTypesSpot),
+		}
+
+		if aws.StringValue(ng.Nodegroup.Status) != eks.NodegroupStatusUpdating {
+			ngToAdd.Version = ng.Nodegroup.Version
 		}
 
 		if aws.BoolValue(ngToAdd.RequestSpotInstances) {
