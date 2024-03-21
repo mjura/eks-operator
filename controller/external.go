@@ -18,18 +18,13 @@ import (
 )
 
 // StartAWSSessions starts AWS sessions.
-func StartAWSService(ctx context.Context, secretsCache wranglerv1.SecretCache, spec eksv1.EKSClusterConfigSpec) (*awsServices, error) {
+func StartAWSService(ctx context.Context, secretsCache wranglerv1.SecretCache, spec eksv1.EKSClusterConfigSpec) (services.EKSServiceInterface, error) {
 	cfg, err := newAWSConfigV2(ctx, secretsCache, spec)
 	if err != nil {
 		return nil, err
 	}
 
-	return &awsServices{
-		eks:            services.NewEKSService(cfg),
-		cloudformation: services.NewCloudFormationService(cfg),
-		iam:            services.NewIAMService(cfg),
-		ec2:            services.NewEC2Service(cfg),
-	}, nil
+	return services.NewEKSService(cfg), err
 }
 
 // NodeGroupIssueIsUpdatable checks to see the node group can be updated with the given issue code.
