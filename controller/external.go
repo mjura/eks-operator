@@ -18,7 +18,31 @@ import (
 )
 
 // StartAWSSessions starts AWS sessions.
-func StartAWSService(ctx context.Context, secretsCache wranglerv1.SecretCache, spec eksv1.EKSClusterConfigSpec) (services.EKSServiceInterface, error) {
+func StartAWSService(ctx context.Context, secretsCache wranglerv1.SecretCache, spec eksv1.EKSClusterConfigSpec) (awsServices, error) {
+	cfg, err := newAWSConfigV2(ctx, secretsCache, spec)
+	if err != nil {
+		return awsServices{}, err
+	}
+
+	return awsServices{
+		eks:            services.NewEKSService(cfg),
+		cloudformation: services.NewCloudFormationService(cfg),
+		iam:            services.NewIAMService(cfg),
+		ec2:            services.NewEC2Service(cfg),
+	}, nil
+}
+
+func StartEC2Service(ctx context.Context, secretsCache wranglerv1.SecretCache, spec eksv1.EKSClusterConfigSpec) (services.EC2ServiceInterface, error) {
+	cfg, err := newAWSConfigV2(ctx, secretsCache, spec)
+	if err != nil {
+		return nil, err
+	}
+
+	return services.NewEC2Service(cfg), err
+}
+
+// StartAWSSessions starts AWS sessions.
+func StartEKSService(ctx context.Context, secretsCache wranglerv1.SecretCache, spec eksv1.EKSClusterConfigSpec) (services.EKSServiceInterface, error) {
 	cfg, err := newAWSConfigV2(ctx, secretsCache, spec)
 	if err != nil {
 		return nil, err
