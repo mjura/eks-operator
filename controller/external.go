@@ -13,8 +13,24 @@ import (
 	awsservices "github.com/rancher/eks-operator/pkg/eks"
 	"github.com/rancher/eks-operator/pkg/eks/services"
 	"github.com/rancher/eks-operator/utils"
+	wranglerv1 "github.com/rancher/wrangler/v2/pkg/generated/controllers/core/v1"
 	"github.com/sirupsen/logrus"
 )
+
+// StartAWSSessions starts AWS sessions.
+func StartAWSService(ctx context.Context, secretsCache wranglerv1.SecretCache, spec eksv1.EKSClusterConfigSpec) (*awsServices, error) {
+	cfg, err := newAWSConfigV2(ctx, secretsCache, spec)
+	if err != nil {
+		return nil, err
+	}
+
+	return &awsServices{
+		eks:            services.NewEKSService(cfg),
+		cloudformation: services.NewCloudFormationService(cfg),
+		iam:            services.NewIAMService(cfg),
+		ec2:            services.NewEC2Service(cfg),
+	}, nil
+}
 
 // NodeGroupIssueIsUpdatable checks to see the node group can be updated with the given issue code.
 func NodeGroupIssueIsUpdatable(code string) bool {
